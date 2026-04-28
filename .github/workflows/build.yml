@@ -16,25 +16,28 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
+    - name: Install system tools
+      run: |
+        apt-get update -qq
+        apt-get install -y -qq wget unzip > /dev/null 2>&1
+        which wget && which unzip
+
     - name: Install Android SDK
       run: |
         mkdir -p /opt/android-sdk/cmdline-tools
-        curl -sL "https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip" -o /tmp/cmdline.zip
+        wget -q "https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip" -O /tmp/cmdline.zip
         unzip -q /tmp/cmdline.zip -d /tmp/c
         cp -r /tmp/c/cmdline-tools /opt/android-sdk/cmdline-tools/latest
         yes | /opt/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses 2>/dev/null || true
         /opt/android-sdk/cmdline-tools/latest/bin/sdkmanager "platforms;android-34" "build-tools;34.0.0"
 
-    - name: Download Gradle wrapper JAR
+    - name: Setup Gradle wrapper
       run: |
         mkdir -p gradle/wrapper
-        curl -sL "https://github.com/nicoulaj/gradle-wrapper-artifact/raw/main/gradle-8.4/gradle-wrapper.jar" -o gradle/wrapper/gradle-wrapper.jar || \
-        curl -sL "https://repo.maven.apache.org/maven2/org/gradle/gradle-wrapper/8.4/gradle-wrapper-8.4.jar" -o gradle/wrapper/gradle-wrapper.jar || \
-        echo "FALLBACK: downloading from Gradle distribution zip"
-        curl -sL "https://services.gradle.org/distributions/gradle-8.4-bin.zip" -o /tmp/gradle.zip
+        wget -q "https://services.gradle.org/distributions/gradle-8.4-bin.zip" -O /tmp/gradle.zip
         unzip -q /tmp/gradle.zip -d /tmp/
-        cp /tmp/gradle-8.4/lib/gradle-wrapper-*.jar gradle/wrapper/gradle-wrapper.jar 2>/dev/null || \
-        cp $(find /tmp/gradle-8.4 -name "gradle-wrapper*.jar" | head -1) gradle/wrapper/gradle-wrapper.jar
+        JAR=$(find /tmp/gradle-8.4 -name "gradle-wrapper*.jar" 2>/dev/null | head -1)
+        if [ -n "$JAR" ]; then cp "$JAR" gradle/wrapper/gradle-wrapper.jar; fi
         ls -la gradle/wrapper/
 
     - name: Build APK
@@ -43,10 +46,7 @@ jobs:
         ANDROID_SDK_ROOT: /opt/android-sdk
       run: |
         chmod +x ./gradlew
-        ./gradlew assembleDebug --no-daemon 2>&1
-
-    - name: Show APK
-      run: find . -name "*.apk"
+        ./gradlew assembleDebug --no-daemon
 
     - name: Upload APK
       uses: actions/upload-artifact@v5
