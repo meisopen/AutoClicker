@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">连点器</string>
+    <string name="accessibility_service_label">连点器无障碍服务</string>
+    <string name="accessibility_service_description">使连点器能够在屏幕上模拟触控点击操作，无需 ROOT 权限。</string>
+</resources>
