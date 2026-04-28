@@ -28,7 +28,13 @@ jobs:
     - name: Download Gradle wrapper JAR
       run: |
         mkdir -p gradle/wrapper
-        curl -sL "https://raw.githubusercontent.com/gradle/gradle/v8.4.0/gradle/wrapper/gradle-wrapper.jar" -o gradle/wrapper/gradle-wrapper.jar
+        curl -sL "https://github.com/nicoulaj/gradle-wrapper-artifact/raw/main/gradle-8.4/gradle-wrapper.jar" -o gradle/wrapper/gradle-wrapper.jar || \
+        curl -sL "https://repo.maven.apache.org/maven2/org/gradle/gradle-wrapper/8.4/gradle-wrapper-8.4.jar" -o gradle/wrapper/gradle-wrapper.jar || \
+        echo "FALLBACK: downloading from Gradle distribution zip"
+        curl -sL "https://services.gradle.org/distributions/gradle-8.4-bin.zip" -o /tmp/gradle.zip
+        unzip -q /tmp/gradle.zip -d /tmp/
+        cp /tmp/gradle-8.4/lib/gradle-wrapper-*.jar gradle/wrapper/gradle-wrapper.jar 2>/dev/null || \
+        cp $(find /tmp/gradle-8.4 -name "gradle-wrapper*.jar" | head -1) gradle/wrapper/gradle-wrapper.jar
         ls -la gradle/wrapper/
 
     - name: Build APK
